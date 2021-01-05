@@ -1,4 +1,3 @@
-import time
 from pymongo import MongoClient
 from config import MAIN_DB, ADMIN_DB
 import requests
