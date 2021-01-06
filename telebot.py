@@ -20,33 +20,11 @@ db = client['NEW_DB']
 new_collection = db[MAIN_DB]
 adm_collection = db[ADMIN_DB]
 
-WEBHOOK_HOST = '89.223.95.82'
-WEBHOOK_PORT = 443  # 443, 80, 88 или 8443 (порт должен быть открыт!)
-WEBHOOK_LISTEN = '0.0.0.0'  # На некоторых серверах придется указывать такой же IP, что и выше
-
-WEBHOOK_SSL_CERT = '/home/monylait/test/lab_test/webhook_cert.pem'  # Путь к сертификату
-WEBHOOK_SSL_PRIV = '/home/monylait/test/lab_test/webhook_pkey.pem'  # Путь к приватному ключу
-
-WEBHOOK_URL_BASE = "https://%s:%s" % (WEBHOOK_HOST, WEBHOOK_PORT)
-WEBHOOK_URL_PATH = "/%s/" % (TOKEN)
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MongoStorage())
 
-class WebhookServer(object):
-    @cherrypy.expose
-    def index(self):
-        if 'content-length' in cherrypy.request.headers and \
-                        'content-type' in cherrypy.request.headers and \
-                        cherrypy.request.headers['content-type'] == 'application/json':
-            length = int(cherrypy.request.headers['content-length'])
-            json_string = cherrypy.request.body.read(length).decode("utf-8")
-            update = telebot.types.Update.de_json(json_string)
-            # Эта функция обеспечивает проверку входящего сообщения
-            bot.process_new_updates([update])
-            return ''
-        else:
-            raise cherrypy.HTTPError(403)
+
 
 class States(Helper):
     mode = HelperMode.snake_case
@@ -282,5 +260,4 @@ async def echo(msg: types.Message, state: FSMContext):
 
 if __name__ == '__main__':
     parser()
-    cherrypy.quickstart(WebhookServer(), WEBHOOK_URL_PATH, {'/': {}})
-    #executor.start_polling(dp)
+    executor.start_polling(dp)
