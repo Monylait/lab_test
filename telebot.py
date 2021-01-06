@@ -14,8 +14,7 @@ from starlette.routing import Route
 from starlette.responses import JSONResponse
 from starlette.middleware import Middleware
 
-
-from weebhook import set_weebhook, set_delete
+from weebhook import set_weebhook
 from keyboard import board_1, board_3
 from functions import parser, db_list, create_inline_keyboard, create_reply_keyboard, create_reply_keyboard_1
 from config import TOKEN, MAIN_DB, ADMIN_DB, PASSWORD
@@ -263,8 +262,9 @@ routes=[
 middlewares=[
     Middleware(home)]
 
+
 if __name__ == '__main__':
     parser()
     set_weebhook()
-   # executor.start_polling(dp)
     app=Starlette(debug=False, routes=routes) #middleware=middlewares)
+    executor.start_polling(dp)
