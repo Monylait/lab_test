@@ -8,10 +8,14 @@ from aiogram.utils.helper import Helper, HelperMode, Item
 from aiogram.contrib.fsm_storage.mongo import MongoStorage
 from aiogram.utils.markdown import text, bold, code
 from aiogram.types import ParseMode, ReplyKeyboardRemove
-import telebot
-import cherrypy
+from starlette.applications import Starlette
+from starlette.requests import Request
+from starlette.routing import Route
+from starlette.responses import JSONResponse
+from starlette.middleware import Middleware
 
 
+from weebhook import set_weebhook,delete_webhook
 from keyboard import board_1, board_3
 from functions import parser, db_list, create_inline_keyboard, create_reply_keyboard, create_reply_keyboard_1
 from config import TOKEN, MAIN_DB, ADMIN_DB, PASSWORD
@@ -21,35 +25,12 @@ db = client['NEW_DB']
 new_collection = db[MAIN_DB]
 adm_collection = db[ADMIN_DB]
 
-WEBHOOK_HOST = '89.223.95.82'
-WEBHOOK_PORT = 443  # 443, 80, 88 или 8443 (порт должен быть открыт!)
-WEBHOOK_LISTEN = '89.223.95.82'  # На некоторых серверах придется указывать такой же IP, что и выше
-
-WEBHOOK_SSL_CERT = '/home/monylait/test/lab_test/webhook_cert.pem'  # Путь к сертификату
-WEBHOOK_SSL_PRIV = '/home/monylait/test/lab_test/webhook_pkey.pem'  # Путь к приватному ключу
-
-WEBHOOK_URL_BASE = "https://%s:%s" % (WEBHOOK_HOST, WEBHOOK_PORT)
-WEBHOOK_URL_PATH = "/%s/" % (TOKEN)
-
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MongoStorage())
 
 
-class WebhookServer(object):
-    @cherrypy.expose
-    def index(self):
-        if 'content-length' in cherrypy.request.headers and \
-                        'content-type' in cherrypy.request.headers and \
-                        cherrypy.request.headers['content-type'] == 'application/json':
-            length = int(cherrypy.request.headers['content-length'])
-            json_string = cherrypy.request.body.read(length).decode("utf-8")
-            update = types.Update.de_json(json_string)
-            # Эта функция обеспечивает проверку входящего сообщения
-            bot.process_new_updates([update])
-            return ''
-        else:
-            raise cherrypy.HTTPError(403)
+
 
 
 class States(Helper):
@@ -61,6 +42,13 @@ class States(Helper):
     EMAIL = Item()
     PHONE = Item()
     CHANGE = Item()
+
+async def home(request: Request):
+    if request.json()['message'][0].type ==types.CallbackQuery:
+        callback_query_handler(request)
+    elif request.json()['message'][0].type ==types.Message:
+        message_handler(request)
+
 
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('btn'))
 async def process_callback_kb1btn1(callback_query: types.CallbackQuery):
@@ -269,22 +257,14 @@ async def echo(msg: types.Message, state: FSMContext):
     else:
         await bot.send_message(msg.from_user.id, 'Я не знаю таких слов')
 
+routes=[
+    Route("/KB_8118_Bot", home, methods=['post'])]
 
-
-
-    bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH,
-                certificate=open(WEBHOOK_SSL_CERT, 'r'))
-    cherrypy.config.update({
-    'server.socket_host': WEBHOOK_LISTEN,
-    'server.socket_port': WEBHOOK_PORT,
-    'server.ssl_module': 'builtin',
-    'server.ssl_certificate': WEBHOOK_SSL_CERT,
-    'server.ssl_private_key': WEBHOOK_SSL_PRIV
-})
-
+middlewares=[
+    Middleware(Logger)]
 
 if __name__ == '__main__':
     parser()
-    cherrypy.quickstart(WebhookServer(), WEBHOOK_URL_PATH, {'/': {}})
+    set_weebhook()
    # executor.start_polling(dp)
+    app=Starlette(debug=False, routes=routes, middleware=middlewares)
