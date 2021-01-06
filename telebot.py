@@ -23,7 +23,7 @@ adm_collection = db[ADMIN_DB]
 
 WEBHOOK_HOST = '89.223.95.82'
 WEBHOOK_PORT = 443  # 443, 80, 88 или 8443 (порт должен быть открыт!)
-WEBHOOK_LISTEN = '0.0.0.0'  # На некоторых серверах придется указывать такой же IP, что и выше
+WEBHOOK_LISTEN = '89.223.95.82'  # На некоторых серверах придется указывать такой же IP, что и выше
 
 WEBHOOK_SSL_CERT = '/home/monylait/test/lab_test/webhook_cert.pem'  # Путь к сертификату
 WEBHOOK_SSL_PRIV = '/home/monylait/test/lab_test/webhook_pkey.pem'  # Путь к приватному ключу
