@@ -29,7 +29,7 @@ WEBHOOK_SSL_CERT = '/home/monylait/test/lab_test/webhook_cert.pem'  # Путь �
 WEBHOOK_SSL_PRIV = '/home/monylait/test/lab_test/webhook_pkey.pem'  # Путь к приватному ключу
 
 WEBHOOK_URL_BASE = "https://%s:%s" % (WEBHOOK_HOST, WEBHOOK_PORT)
-WEBHOOK_URL_PATH = "/%s/" % (config.token)
+WEBHOOK_URL_PATH = "/%s/" % (TOKEN)
 
 
 bot = Bot(token=TOKEN)
