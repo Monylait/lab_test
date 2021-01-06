@@ -17,7 +17,7 @@ from starlette.middleware import Middleware
 from weebhook import set_weebhook
 from keyboard import board_1, board_3, board_5
 from functions import parser, db_list, create_inline_keyboard, create_reply_keyboard
-from config import TOKEN, MAIN_DB, ADMIN_DB, PASSWORD
+from config import  MAIN_DB, ADMIN_DB, PASSWORD
 
 client = MongoClient("localhost", 27017) 
 db = client['NEW_DB']
