@@ -8,8 +8,3 @@ def set_weebhook():
         params={
                 'url':'https://89.223.95.82:443/KB_8118_Bot'},
         files={'certificate':open('webhook_cert.pem','rb')}).json()
-
-
-
-
-

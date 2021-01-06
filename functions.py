@@ -117,7 +117,3 @@ def create_reply_keyboard():
         board_4.insert(KeyboardButton(f'{i}'))
     return board_4
     
-def create_reply_keyboard_1():
-    board_5 = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).insert(KeyboardButton('Должность'), KeyboardButton('Фамилия'))
-    board_5.insert(KeyboardButton('Имя'), KeyboardButton('Отчество'), KeyboardButton('Кабинет'), KeyboardButton('Телефон'), KeyboardButton('Email'))
-    return board_5
