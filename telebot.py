@@ -8,8 +8,6 @@ from aiogram.utils.helper import Helper, HelperMode, Item
 from aiogram.contrib.fsm_storage.mongo import MongoStorage
 from aiogram.utils.markdown import text, bold, code
 from aiogram.types import ParseMode, ReplyKeyboardRemove
-import telebot
-import cherrypy
 
 from keyboard import board_1, board_3
 from functions import parser, db_list, create_inline_keyboard, create_reply_keyboard, create_reply_keyboard_1
