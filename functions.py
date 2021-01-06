@@ -12,6 +12,8 @@ adm_collection = db[ADMIN_DB]
 
 def parser():
 
+    new_collection.remove({})
+    adm_collection.remove({})
 
     list_url=list()
     string='https://www.dvfu.ru/'

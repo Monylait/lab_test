@@ -17,7 +17,7 @@ from starlette.middleware import Middleware
 from weebhook import set_weebhook
 from keyboard import board_1, board_3, board_5
 from functions import parser, db_list, create_inline_keyboard, create_reply_keyboard
-from config import  MAIN_DB, ADMIN_DB, PASSWORD
+from config import TOKEN, MAIN_DB, ADMIN_DB, PASSWORD
 
 client = MongoClient("localhost", 27017) 
 db = client['NEW_DB']
@@ -35,6 +35,7 @@ dp = Dispatcher(bot, storage=MongoStorage())
 class States(Helper):
     mode = HelperMode.snake_case
     ADMIN = Item()
+    DELETE = Item()
     FIO = Item()
     DOLJ = Item()
     ADRESS = Item()
