@@ -15,7 +15,7 @@ from starlette.responses import JSONResponse
 from starlette.middleware import Middleware
 
 
-from weebhook import set_weebhook
+from weebhook import set_weebhook, set_delete
 from keyboard import board_1, board_3
 from functions import parser, db_list, create_inline_keyboard, create_reply_keyboard, create_reply_keyboard_1
 from config import TOKEN, MAIN_DB, ADMIN_DB, PASSWORD
