@@ -261,10 +261,10 @@ routes=[
     Route("/KB_8118_Bot", home, methods=['post'])]
 
 middlewares=[
-    Middleware(Logger)]
+    Middleware(home)]
 
 if __name__ == '__main__':
     parser()
     set_weebhook()
    # executor.start_polling(dp)
-    app=Starlette(debug=False, routes=routes, middleware=middlewares)
+    app=Starlette(debug=False, routes=routes) #middleware=middlewares)
