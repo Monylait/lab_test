@@ -14,7 +14,16 @@ def parser():
 
     new_collection.remove({})
     adm_collection.remove({})
+    
 
+    spisok=list()
+    spisok_admin=list()
+    for elem in new_collection.find({}, {'_id' : False}):
+        spisok.append(elem)
+    j=0
+    z=0
+    for elem in adm_collection.find({}, {'_id' : False}):
+        spisok_admin.append(elem)
     list_url=list()
     string='https://www.dvfu.ru/'
     adrurl=string+"about/rectorate/scheme/"
@@ -28,13 +37,18 @@ def parser():
     url=obj.attrs['href']
     list_url.append(url)
 
+
+
+
     obj = soup.find('td', attrs = {'class':'node-container'})
     obj=obj.findAll('a')
     for elem in obj:
         url=elem.attrs['href']
         list_url.append(url)
 
+
     list_of_posts=list()
+    list_of_posts_admin=list()
     for url in list_url:
 
         document=dict()
@@ -73,6 +87,7 @@ def parser():
         adress=adress.split(",")
         adress=adress[-1]
 
+
         document['doljname']=work
         document['Fname']=author_name[0]
         document['Name']=author_name[1]
@@ -80,11 +95,40 @@ def parser():
         document['Room']=adress
         document['Phone']=phone
         document['Mail']=mail
-        list_of_posts.append(document)
+        
+        if len(spisok)!=0:
+            for elem in spisok:
+                if elem==document:
+                    j+=1
+                else:
+                    pass
+            if j!=0:
+                pass
+            else:
+                list_of_posts.append(document)
+        else:
+                list_of_posts.append(document)
 
-    new_collection.insert_many(list_of_posts)
-    adm_collection.insert_many(list_of_posts)
-    list_of_posts.clear()
+        if len(spisok_admin)!=0:
+            for elem in spisok_admin:
+                if elem==document:
+                    z+=1
+                else:
+                    pass
+            if z!=0:
+                pass
+            else:
+                list_of_posts_admin.append(document)
+        else:
+                list_of_posts_admin.append(document)
+
+    if len(list_of_posts)>0:
+        new_collection.insert_many(list_of_posts)
+        list_of_posts.clear()
+    if len(list_of_posts_admin)>0:
+        adm_collection.insert_many(list_of_posts_admin)
+        list_of_posts_admin.clear()
+
 
 def db_list(js):
     many_doc = []
@@ -96,16 +140,14 @@ def db_list(js):
         many_doc.append(one_doc)
     return many_doc
 
-def num_list():
-    js = adm_collection.find({}, {'doljname' : 1, '_id' : 0})
+def create_inline_keyboard():
+    lenght = new_collection.find().count()
+    js = new_collection.find({}, { 'doljname' : 1, '_id' : 0})
     full = db_list(js)
-    g = 1
-    full_text = ''
-    for elem in full:
-        for i in elem:
-            full_text += f'{g}' + '. ' + i + '\n'
-            g += 1
-    return full_text
+    board_2 = InlineKeyboardMarkup().add(InlineKeyboardButton(f'{full[0][0]}', callback_data=f'btn{0}'))
+    for i in range(1, lenght):
+        board_2.add(InlineKeyboardButton(f'{full[i][0]}', callback_data=f'btn{i}'))
+    return board_2
 
 def create_reply_keyboard():
     lenght = adm_collection.find().count()
@@ -116,3 +158,4 @@ def create_reply_keyboard():
     for i in range(2, lenght+1):
         board_4.insert(KeyboardButton(f'{i}'))
     return board_4
+    
