@@ -104,7 +104,7 @@ async def admin(msg: types.Message, state: FSMContext):
         await bot.send_message(msg.from_user.id, "Это весь список, кого будем удалять?", reply_markup=board_4)
     elif text == 'Сохранить': #обновление коллекции, сброс состояния
         new_collection.remove({})
-        docs = adm_collection.find({},{'_id' : 0})
+        docs = adm_collection.find({},{'_id' : 0,'edited': 0})
         full = []
         for doc in docs:
             if 'admin_id' in doc:
@@ -114,66 +114,94 @@ async def admin(msg: types.Message, state: FSMContext):
             full.append(doc)
         new_collection.insert_many(full)
         await state.finish()
-        await bot.send_message(msg.from_user.id, "Все изменения сохранены", reply_markup=ReplyKeyboardRemove())
+        await bot.send_message(msg.from_user.id, "Воистину админь")
+    elif text == 'Запуск парсера':
+        parser()
 
 @dp.message_handler(state=States.DOLJ, content_types=['text'])
 async def dolj(msg: types.Message, state: FSMContext):
-    dolj = msg.text                         #получаем текст из сообщения
-    await state.set_state(States.ADMIN)     #смена состояния
-    await state.update_data(doljname=dolj)  #привязка текущей инфы к состоянию
-    await state.set_state(States.FIO)       #смена состояния на следующее
-    await bot.send_message(msg.from_user.id, 'Введи фамилию, имя и отчество через пробелы')
+    dolj = msg.text                             #получаем текст из сообщения
+    if dolj.isalpha():                       
+        await state.set_state(States.ADMIN)     #смена состояния на админку
+        await state.update_data(doljname=dolj)  #привязка текущей инфы к состоянию
+        await state.set_state(States.FIO)       #смена состояния на следующее
+        await bot.send_message(msg.from_user.id, 'Введи фамилию, имя и отчество через пробелы')
+    else:
+        await bot.send_message(msg.from_user.id, 'Неверный формат')
 
 @dp.message_handler(state=States.FIO, content_types=['text'])
 async def fio(msg: types.Message, state: FSMContext):
     fio = msg.text
-    fio = fio.split(' ')
-    if len(fio) != 3:
-        await bot.send_message(msg.from_user.id, 'Неверный формат!\nВведи фамилию, имя и отчество через пробелы')
-        return
-    await state.set_state(States.ADMIN)
-    await state.update_data(Fname=fio[0])
-    await state.update_data(Name=fio[1])
-    await state.update_data(Oname=fio[2])
-    await state.set_state(States.ADRESS)
-    await bot.send_message(msg.from_user.id, "Введи кабинет: ")
+    if fio.istitle():
+        fio = fio.split(' ')
+        if len(fio) != 3:
+            await bot.send_message(msg.from_user.id, 'Неверный формат!\nВведи фамилию, имя и отчество через пробелы')
+            return
+        await state.set_state(States.ADMIN)
+        await state.update_data(Fname=fio[0])
+        await state.update_data(Name=fio[1])
+        await state.update_data(Oname=fio[2])
+        await state.set_state(States.ADRESS)
+        await bot.send_message(msg.from_user.id, "Введи кабинет: ")
+    else:
+        await bot.send_message(msg.from_user.id, 'Неверный формат')
 
 @dp.message_handler(state=States.ADRESS, content_types=['text'])
 async def adress(msg: types.Message, state: FSMContext):
     adress = msg.text
-    await state.set_state(States.ADMIN)
-    await state.update_data(Room=adress)
-    await state.set_state(States.PHONE)
-    await bot.send_message(msg.from_user.id, "Введи телефон: ")
+    if adress.isalnum():
+        await state.set_state(States.ADMIN)
+        await state.update_data(Room=adress)
+        await state.set_state(States.PHONE)
+        await bot.send_message(msg.from_user.id, "Введи телефон: ")
+    else:
+        await bot.send_message(msg.from_user.id, 'Неверный формат')
 
 @dp.message_handler(state=States.PHONE, content_types=['text'])
 async def phone(msg: types.Message, state: FSMContext):
     phone = msg.text
-    await state.set_state(States.ADMIN)
-    await state.update_data(Phone=phone)
-    await state.set_state(States.EMAIL)
-    await bot.send_message(msg.from_user.id, "Введи email: ")
+    if phone.isdigit() is False:
+        await bot.send_message(msg.from_user.id, 'Неверный формат')
+    elif phone.count('+') != 0 and phone[1:].isdigit() is False:
+        await bot.send_message(msg.from_user.id, 'Неверный формат')
+    else:
+        await state.set_state(States.ADMIN)
+        await state.update_data(Phone=phone)
+        await state.set_state(States.EMAIL)
+        await bot.send_message(msg.from_user.id, "Введи email: ")
 
 @dp.message_handler(state=States.EMAIL, content_types=['text'])
 async def email(msg: types.Message, state: FSMContext):
     email = msg.text
-    await state.set_state(States.ADMIN)
-    await state.update_data(Mail=email)
-    user_data = await state.get_data()  #получаем всю инфу из состояния
-    results = []
-    results.append(user_data)
-    adm_collection.insert_many(results) #добавление документа в adm_collection
-    await bot.send_message(msg.from_user.id, "Если это все, что ты хотел - жми 'Сохранить', "
-                            "ну или выбирай, что будем делать", reply_markup=board_3)
+    if email.count('@') == 1:
+        email = email.split('@')
+        if email[0].isalnum() and email[1].count('.')==1:
+            email = email[1].split('.')
+            if email[0].isalpha() and email[1].isalpha():
+                await state.set_state(States.ADMIN)
+                await state.update_data(Mail=email)
+                user_data = await state.get_data()  #получаем всю инфу из состояния
+                user_data.update({'edited': '1'})
+                results = []
+                results.append(user_data)
+                adm_collection.insert_many(results) #добавление документа в adm_collection
+                await bot.send_message(msg.from_user.id, "Если это все, что ты хотел - жми 'Сохранить', "
+                                        "ну или выбирай, что будем делать", reply_markup=board_3)
+            else:
+                await bot.send_message(msg.from_user.id, 'Неверный формат')
+        else:
+            await bot.send_message(msg.from_user.id, 'Неверный формат')
+    else:
+        await bot.send_message(msg.from_user.id, 'Неверный формат')
 
 @dp.message_handler(state=States.CHANGE, content_types=['text']) #режим внесения изменений
 async def change(msg: types.Message, state: FSMContext):
     text = msg.text
     board_4 = create_reply_keyboard()
-    key_list = ['doljname', 'Fname', 'Name', 'Oname', 'Room', 'Phone', 'Mail']
+    key_list = ['doljname', 'Fname', 'Name', 'Oname', 'Room', 'Phone', 'Mail'] 
     if  text.isdigit():             #получает номер выбранного руководителя
         code = int(text)-1
-        change = adm_collection.find({}, {'_id' : 0}).skip(code).limit(1)
+        change = adm_collection.find({}, {'_id' : 0, 'edited': 0}).skip(code).limit(1)
         full = db_list(change)
         user_id = msg.from_user.id
         if len(full) < 1:           #проверка на существования такого номера в коллекции
@@ -218,9 +246,9 @@ async def change(msg: types.Message, state: FSMContext):
         if 'text' in data:          #проверка на параметр изменения&внесение изменений
             code = int(data['code'])    #номер руководителя в коллекции
             num = int(data['text'])     #параметр изменения
-            change = adm_collection.find({}, {'_id' : 0}).skip(code-1).limit(1)
+            change = adm_collection.find({}, {'_id' : 0, 'edited': 0}).skip(code-1).limit(1)
             full = db_list(change)
-            new_doc = {f'{key_list[num]}' : text}
+            new_doc = {f'{key_list[num]}' : text, 'edited': '1'}
             adm_collection.update_one({'doljname' : full[0][0]}, {"$set": new_doc})
             await state.set_state(States.ADMIN)
             await bot.send_message(msg.from_user.id, "Если это все, что ты хотел - жми 'Сохранить', ну или выбирай, что будем делать", reply_markup=board_3)
@@ -235,9 +263,9 @@ async def change_room(msg: types.Message, state: FSMContext):
     data = await state.get_data()
     code = int(data['code'])
     num = int(data['text'])
-    change = adm_collection.find({}, {'_id' : 0}).skip(code-1).limit(1)
+    change = adm_collection.find({}, {'_id' : 0, 'edited': 0}).skip(code-1).limit(1)
     full = db_list(change)
-    new_doc = {f'{key_list[num]}' : text}
+    new_doc = {f'{key_list[num]}' : text, 'edited': '1'}
     adm_collection.update_one({'doljname' : full[0][0]}, {"$set": new_doc})
     await state.set_state(States.ADMIN)
     await bot.send_message(msg.from_user.id, "Если это все, что ты хотел - жми 'Сохранить', ну или выбирай, что будем делать", reply_markup=board_3)
@@ -248,7 +276,7 @@ async def delete(msg: types.Message, state: FSMContext):
     board_4 = create_reply_keyboard()
     if  text.isdigit():
         code = int(text)-1
-        delete = adm_collection.find({}, {'_id' : 0}).skip(code).limit(1)
+        delete = adm_collection.find({}, {'_id' : 0, 'edited': 0}).skip(code).limit(1)
         full = db_list(delete)
         user_id = msg.from_user.id
         if len(full) < 1:           #проверка на существования такого номера в коллекции
@@ -271,7 +299,7 @@ async def delete(msg: types.Message, state: FSMContext):
 async def echo(msg: types.Message, state: FSMContext):
     text = msg.text
     if text == 'Полная':    #edit
-        js = new_collection.find({}, { '_id' : 0})
+        js = new_collection.find({}, { '_id' : 0, 'edited': 0})
         full = db_list(js)
         for elem in full:
             full_text = ''
@@ -279,7 +307,7 @@ async def echo(msg: types.Message, state: FSMContext):
                 full_text += i + '\n'
             await bot.send_message(msg.chat.id, full_text)
     elif text == 'Фио':     #edit
-        js = new_collection.find({}, { 'doljname' : 1, 'Fname' : 1, 'Name': 1, 'Oname': 1, '_id' : 0})
+        js = new_collection.find({}, { 'doljname' : 1, 'Fname' : 1, 'Name': 1, 'Oname': 1, '_id' : 0, 'edited': 0})
         full = db_list(js)
         for elem in full:
             full_text = []
@@ -289,7 +317,7 @@ async def echo(msg: types.Message, state: FSMContext):
             full_text = ' '.join(full_text)
             await bot.send_message(msg.chat.id, full_text)
     elif text.isdigit():    #worker
-        js = new_collection.find({}, { '_id' : 0})
+        js = new_collection.find({}, { '_id' : 0, 'edited': 0})
         full = db_list(js)
         code = int(text)-1
         full_text = ''
