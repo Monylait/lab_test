@@ -15,7 +15,6 @@ def parser():
     new_collection.remove({})
     adm_collection.remove({})
     
-...
     spisok=list()
     spisok_admin=list()
     for elem in new_collection.find({}, {'_id' : False}):
@@ -128,7 +127,7 @@ def parser():
     if len(list_of_posts_admin)>0:
         adm_collection.insert_many(list_of_posts_admin)
         list_of_posts_admin.clear()
-...
+        
 
 def db_list(js):
     many_doc = []
