@@ -17,7 +17,7 @@ def parser():
     
     spisok=list()
     spisok_admin=list()
-    for elem in new_collection.find({}, {'_id' : False}):
+    for elem in new_collection.find({}, {'_id' : False,'edited':False}):
         spisok.append(elem)
     j=0
     z=0
