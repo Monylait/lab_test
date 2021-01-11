@@ -36,7 +36,7 @@ class States(Helper):
     PHONE = Item()
     CHANGE = Item()
     CHANGE_ROOM = Item()
-    USER = Iten()
+    USER = Item()
 
 async def home(request: Request):
     if request.json()['message'][0].type ==types.Message:
