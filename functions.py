@@ -126,7 +126,7 @@ def parser():
         list_of_posts_admin.clear()
         
 
-def save_adm(user_id, state):
+def save_adm(user_id):
     new_collection.remove({})
     docs = adm_collection.find({},{'_id' : 0,'edited': 0})
     full = []
