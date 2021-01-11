@@ -11,9 +11,6 @@ new_collection = db[MAIN_DB]
 adm_collection = db[ADMIN_DB]
 
 def parser():
-
-    new_collection.remove({})
-    adm_collection.remove({})
     
     spisok=list()
     spisok_admin=list()
