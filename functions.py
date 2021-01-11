@@ -126,6 +126,20 @@ def parser():
         list_of_posts_admin.clear()
         
 
+def save_adm(user_id, state):
+    new_collection.remove({})
+    docs = adm_collection.find({},{'_id' : 0,'edited': 0})
+    full = []
+    for doc in docs:
+        if 'admin_id' in doc:
+            if doc['admin_id'] == str(user_id):
+                adm_collection.update_one({'doljname' : doc['doljname']}, {"$unset": {'admin_id' : 1}})
+            doc.pop('admin_id')
+        full.append(doc)
+    new_collection.insert_many(full)
+    await state.finish()
+    
+  
 def db_list(js):
     many_doc = []
     one_doc = []
