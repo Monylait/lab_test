@@ -201,11 +201,7 @@ async def change(msg: types.Message, state: FSMContext):
             await bot.send_message(msg.chat.id, "Выбери кого редактироать клавиатуре!", reply_markup=board_4)
             return
         elif 'admin_id' in full[0]:      #проверка admin_id, не допускает параллельного редактирования
-            g = 0
-            for i in range(len(full[0])):
-                if full[0][i] != str(user_id):
-                    g += 1
-            if g == len(full[0]):
+            if full[0][7] != str(user_id):
                 await bot.send_message(msg.chat.id, 'Редактирование сейчас недоступно, выберите другого человека', reply_markup=board_4)
                 return
         else:
