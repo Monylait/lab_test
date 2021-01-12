@@ -14,8 +14,8 @@ from starlette.middleware import Middleware
 
 from weebhook import set_weebhook
 from keyboard import board_1, board_2, board_3
-from functions import parser, db_list, num_list, create_reply_keyboard
-from config import TOKEN, MAIN_DB, ADMIN_DB, PASSWORD
+from functions import parser, db_list, num_list, create_reply_keyboard, save_adm
+from config import TOKEN, MAIN_DB, ADMIN_DB
 
 client = MongoClient("localhost", 27017) 
 db = client['NEW_DB']
@@ -55,18 +55,17 @@ async def process_help_command(msg: types.Message, state: FSMContext):
 
 @dp.message_handler(commands=['edit'], state = '*')
 async def admin_command(msg: types.Message, state: FSMContext):
-    #user_id = msg.from_user.id
-    #acsess = collection.find({}, {_id : 0})
-    #acces_id = db_list()
-    #if str(user_id) in access_id:
-    #    await state.set_state(States.ADMIN)
-    #запуск таймера + прописать сохранения отдельной функциеий.....................................................................
-    #    await bot.send_message(msg.from_user.id, "Что будем делать?", reply_markup=board_3)
-    #    return
-    #await bot.send_message(msg.chat.id, "Ошибка доступа")
-    await bot.send_message(msg.from_user.id, 'Введите пароль для перехода в режим администратора: ')  
-    #запуск таймера
-    #проверка пароля
+    user_id = msg.from_user.id
+    acsess = await bot.get_chat_member(msg.chat.id, user_id)
+    if acsess['status'] == 'administrator' or acsess['status'] == 'creator':
+        await state.set_state(States.ADMIN)
+        #t = Timer(600, save_adm(user_id))
+        #t.start()
+        await bot.send_message(msg.from_user.id, "Админь", reply_markup=board_3)
+        return
+    else:
+        await bot.send_message(msg.chat.id, "Ошибка доступа. Вы не являетесь админом.") 
+        return
 
 @dp.message_handler(commands=['info'], state = '*')
 async def list_command(msg: types.Message, state: FSMContext):
@@ -104,16 +103,7 @@ async def admin(msg: types.Message, state: FSMContext):
         await bot.send_message(msg.from_user.id, full_text)
         await bot.send_message(msg.from_user.id, "Это весь список, кого будем удалять?", reply_markup=board_4)
     elif text == 'Сохранить': #обновление коллекции, сброс состояния
-        new_collection.remove({})
-        docs = adm_collection.find({},{'_id' : 0,'edited': 0})
-        full = []
-        for doc in docs:
-            if 'admin_id' in doc:
-                if doc['admin_id'] == str(user_id):
-                    adm_collection.update_one({'doljname' : doc['doljname']}, {"$unset": {'admin_id' : 1}})
-                doc.pop('admin_id')
-            full.append(doc)
-        new_collection.insert_many(full)
+        save_adm(user_id)
         await state.finish()
         await bot.send_message(msg.from_user.id, "Воистину админь")
     elif text == 'Запуск парсера':
@@ -157,7 +147,7 @@ async def fio(msg: types.Message, state: FSMContext):
 
 @dp.message_handler(state=States.ADRESS, content_types=['text'])
 async def adress(msg: types.Message, state: FSMContext):
-    adress = msg.text
+    adress = str(msg.text)
     if adress.isalnum():
         await state.set_state(States.ADMIN)
         await state.update_data(Room=adress)
@@ -168,7 +158,7 @@ async def adress(msg: types.Message, state: FSMContext):
 
 @dp.message_handler(state=States.PHONE, content_types=['text'])
 async def phone(msg: types.Message, state: FSMContext):
-    phone = msg.text
+    phone = str(msg.text)
     if phone.isdigit() is False:
         await bot.send_message(msg.from_user.id, 'Неверный формат')
     elif phone.count('+') == 0 and phone[1:].isdigit() is False:
@@ -218,8 +208,8 @@ async def change(msg: types.Message, state: FSMContext):
             await bot.send_message(msg.from_user.id, full_text)
             await bot.send_message(msg.from_user.id, "Выбери кого редактироать клавиатуре!", reply_markup=board_4)
             return
-        elif len(full[0]) > 7:      #проверка admin_id, не допускает параллельного редактирования
-            if full[0][7] != str(user_id):
+        elif 'admin_id' in full[0]:      #проверка admin_id, не допускает параллельного редактирования
+            if full[0]['admin_id'] != str(user_id):
                 await bot.send_message(msg.from_user.id, 'Редактирование сейчас недоступно, выберите другого человека', reply_markup=board_4)
                 return
         else:
@@ -336,9 +326,6 @@ async def echo(msg: types.Message, state: FSMContext):
                 for g in full[i]:
                     full_text += str(g) + '\n'
                 await bot.send_message(msg.chat.id, full_text)
-    elif text == PASSWORD:
-        await state.set_state(States.ADMIN)
-        await bot.send_message(msg.from_user.id, "Админь", reply_markup=board_3)
     else:
         await bot.send_message(msg.chat.id, 'Я не знаю таких слов')
 
