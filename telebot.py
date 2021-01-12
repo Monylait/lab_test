@@ -305,9 +305,9 @@ async def echo(msg: types.Message, state: FSMContext):
     elif text == 'Фио':     #edit
         js = new_collection.find({}, { 'Phone' : 0, 'Room' : 0, 'Mail': 0, '_id' : 0})
         full = db_list(js)
-        full_text = []
         str0 = ''
         for elem in full:
+            full_text = []
             for i in elem:
                 full_text.append(str(i))
             full_text.insert(1, '-')
