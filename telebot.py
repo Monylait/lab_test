@@ -312,7 +312,7 @@ async def echo(msg: types.Message, state: FSMContext):
                 full_text.append(str(i))
             full_text.insert(1, '-')
             full_text = ' '.join(full_text)
-            str0 += full_text + '\n'
+            str0 += full_text + '\n\n'
         await bot.send_message(msg.chat.id, str0)
     elif text.isdigit():    #worker
         js = new_collection.find({}, { '_id' : 0, 'edited': 0})
